@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -6,11 +7,17 @@ using UnityEngine.UI;
 
 public class ObjectClicker : MonoBehaviour
 {
+    public GameObject[] cubes;
     public Text turnText;
+
+    List<string> pieces;
 
     public float waitTime = 1f;
 
     private float timer;
+    private bool gameOver = false;
+
+    private bool isPlayerOneTurn;
 
     private int playerTurn = 1;
     private int indArray1 = 0;
@@ -19,120 +26,146 @@ public class ObjectClicker : MonoBehaviour
     readonly private string[] playerOnePieces = new string[5];
     readonly private string[] playerTwoPieces = new string[4];
 
-    readonly private string[] winCondition1 = new string[] { "Cube_1", "Cube_2", "Cube_3" }; //vertical
-    readonly private string[] winCondition2 = new string[] { "Cube_4", "Cube_5", "Cube_6" }; //vertical
-    readonly private string[] winCondition3 = new string[] { "Cube_7", "Cube_8", "Cube_9" }; //vertical
-    readonly private string[] winCondition4 = new string[] { "Cube_1", "Cube_5", "Cube_9" }; //diagonal
-    readonly private string[] winCondition8 = new string[] { "Cube_7", "Cube_5", "Cube_3" }; //diagonal
-    readonly private string[] winCondition5 = new string[] { "Cube_1", "Cube_4", "Cube_7" }; //horizontal
-    readonly private string[] winCondition6 = new string[] { "Cube_2", "Cube_5", "Cube_8" }; //horizontal
-    readonly private string[] winCondition7 = new string[] { "Cube_3", "Cube_6", "Cube_9" }; //horizontal
+    readonly private static string[] winCondition1 = new [] { "Cube_1", "Cube_2", "Cube_3" }; //vertical
+    readonly private static string[] winCondition2 = new [] { "Cube_4", "Cube_5", "Cube_6" }; //vertical
+    readonly private static string[] winCondition3 = new [] { "Cube_7", "Cube_8", "Cube_9" }; //vertical
+    readonly private static string[] winCondition4 = new [] { "Cube_1", "Cube_5", "Cube_9" }; //diagonal
+    readonly private static string[] winCondition5 = new [] { "Cube_1", "Cube_4", "Cube_7" }; //horizontal
+    readonly private static string[] winCondition6 = new [] { "Cube_2", "Cube_5", "Cube_8" }; //horizontal
+    readonly private static string[] winCondition7 = new [] { "Cube_3", "Cube_6", "Cube_9" }; //horizontal
+    readonly private static string[] winCondition8 = new [] { "Cube_7", "Cube_5", "Cube_3" }; //diagonal
+
+    private string[][] winConditions = new[] { winCondition1, winCondition2, winCondition3, winCondition4, winCondition5, winCondition6, winCondition7, winCondition8 };
 
     // Update is called once per frame
+    
+
     void Update()
     {
+        if (gameOver)
+        {
+            return;
+        }
+
         timer += Time.deltaTime;
         //print(timer);
 
-        bool isPlayerOneTurn = (playerTurn % 2) != 0;
+        isPlayerOneTurn = (playerTurn % 2) != 0;
+
+        if ((playerTurn <= 9))
+        {
+            string[] currentPlayerPieces = isPlayerOneTurn ? playerOnePieces : playerTwoPieces;
+
+            if (isPlayerOneTurn)
+            {
+                turnText.text = "Player 1";
+                if (Input.GetMouseButtonDown(0))
+                {
+                    print("Player1 pressed mouse");
+
+                    RaycastHit hit;
+                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+                    if (Physics.Raycast(ray, out hit, 100.0f))
+                    {
+                        if (hit.transform != null)
+                        {
+                            PlacePiece(hit.transform.gameObject);
+                        }
+                    }
+                    turnText.text = "Player 2";
+                    timer = 0f;
+                }
+            }
+            else
+            {
+                if (timer > waitTime)
+                {
+                    GameObject piece = GetAiWinningPiece();
+                    if (piece == null)
+                    {
+                        piece = GetAiLosingPiece();
+                    }
+                    if (piece == null)
+                    {
+                        piece = GameObject.FindGameObjectWithTag("SquareUnselected");
+                    }
+                    PlacePiece(piece);
+                }
+            }
+
+            if (playerTurn >= 5)
+            {
+                if (IsWinningPlay(currentPlayerPieces, winCondition1)
+                 || IsWinningPlay(currentPlayerPieces, winCondition2)
+                 || IsWinningPlay(currentPlayerPieces, winCondition3)
+                 || IsWinningPlay(currentPlayerPieces, winCondition4)
+                 || IsWinningPlay(currentPlayerPieces, winCondition5)
+                 || IsWinningPlay(currentPlayerPieces, winCondition6)
+                 || IsWinningPlay(currentPlayerPieces, winCondition7)
+                 || IsWinningPlay(currentPlayerPieces, winCondition8))
+                {
+                    print("YOU WON!!!!");
+                    turnText.text = "YOU WON!!!!";
+                    gameOver = true;
+                }
+
+            }
+        }
+    }
+
+    private GameObject GetAiLosingPiece()
+    {
+        return GetWinningPiece(playerOnePieces);
+    }
+
+    private GameObject GetAiWinningPiece()
+    {
+        return GetWinningPiece(playerTwoPieces);
+    }
+
+    private GameObject GetWinningPiece(string[] playerPieces)
+    {
+        foreach (var winCondition in winConditions)
+        {
+            var missingPieces = winCondition.Except(playerPieces);
+            if (missingPieces.Count() == 1)
+            {
+                string missingPieceName = missingPieces.First();
+                GameObject missingPiece = GameObject.Find(missingPieceName);
+                if (missingPiece.CompareTag("SquareUnselected"))
+                {
+                    return missingPiece;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private void PlacePiece(int cubeNumber)
+    {
+        PlacePiece(cubes[cubeNumber - 1]);
+    }
+
+    private void PlacePiece(GameObject cube)
+    {
+        cube.tag = "SquareSelected";
+        cube.layer = 2;
+
         if (isPlayerOneTurn)
         {
-            if (Input.GetMouseButtonDown(0))
-            {
-                timer = 0f;
-                print("Player1 pressed mouse");
-                playerTurn++;
-            }
+            cube.GetComponent<Renderer>().material.color = new Color(255, 255, 0);
+            playerOnePieces[indArray1] = cube.name;
+            indArray1++;
         }
         else
         {
-            if (timer > waitTime)
-            {
-                print("Player2 turn");
-                playerTurn++;
-            }
+            cube.GetComponent<Renderer>().material.color = new Color(0, 0, 0);
+            playerTwoPieces[indArray2] = cube.name;
+            indArray2++;
         }
-
-        //if (Input.GetMouseButtonDown(0)) //player 1 uses mouse input
-        //{
-        //    RaycastHit hit;
-        //    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-        //    if (Physics.Raycast(ray, out hit, 100.0f))
-        //    {
-        //        if (hit.transform != null)
-        //        {
-        //            Rigidbody clickedSquare;
-        //            if (clickedSquare = hit.transform.GetComponent<Rigidbody>())
-        //            {
-        //                //print("Hit - this.name: " + this.name);
-        //                //print("hit.transform.gameObject: " + hit.transform.gameObject);
-
-        //                if (playerTurn <= 9)
-        //                {
-        //                    //bool isPlayerOneTurn = (playerTurn % 2) != 0;
-
-        //                    string[] currentPlayerPieces = isPlayerOneTurn ? playerOnePieces : playerTwoPieces;
-
-        //                    print("playerTurn: " + playerTurn);
-
-        //                    //clickedSquare.GetComponent<Renderer>().material.color = isPlayerOneTurn ? new Color(255, 255, 0) : new Color(0, 0, 0);
-        //                    //hit.transform.gameObject.layer = 2;
-
-        //                    if (isPlayerOneTurn)
-        //                    {
-        //                        clickedSquare.GetComponent<Renderer>().material.color = new Color(255, 255, 0);
-        //                        hit.transform.gameObject.layer = 2;
-
-        //                        currentPlayerPieces[indArray1] = hit.transform.gameObject.name;
-        //                        Debug.Log("playerOnePieces[indArray1]: " + " indArray1:  " + indArray1 + currentPlayerPieces[indArray1].ToString());
-        //                        indArray1++;
-        //                    }
-        //                    //else
-        //                    //{
-        //                    //    currentPlayerPieces[indArray2] = hit.transform.gameObject.name;
-        //                    //    Debug.Log("playerTwoPieces[indArray2]: " + " indArray2:  " + indArray2 + currentPlayerPieces[indArray2].ToString());
-        //                    //    indArray2++;
-        //                    //}
-
-        //                    if (playerTurn >= 5)
-        //                    {
-        //                        if (IsWinningPlay(currentPlayerPieces, winCondition1)
-        //                         || IsWinningPlay(currentPlayerPieces, winCondition2)
-        //                         || IsWinningPlay(currentPlayerPieces, winCondition3)
-        //                         || IsWinningPlay(currentPlayerPieces, winCondition4)
-        //                         || IsWinningPlay(currentPlayerPieces, winCondition5)
-        //                         || IsWinningPlay(currentPlayerPieces, winCondition6)
-        //                         || IsWinningPlay(currentPlayerPieces, winCondition7))
-        //                        {
-        //                            print("YOU WON!!!!");
-        //                        }
-        //                        else
-        //                        {
-        //                            print("winCondition[] is not a subset of currentPlayerPieces[]");
-        //                        }
-        //                    }
-
-        //                    playerTurn++;
-        //                }
-        //            }
-        //        }
-        //    }
-        //}
-        //if (!isPlayerOneTurn) // player 2
-        //{
-        //    if (playerTurn <= 9)
-        //    {
-        //        string[] currentPlayerPieces = isPlayerOneTurn ? playerOnePieces : playerTwoPieces;
-        //        print("playerTurn: " + playerTurn);
-
-        //        var playableSquare = GameObject.FindGameObjectWithTag("SquareUnselected");
-        //        playableSquare.GetComponent<Renderer>().material.color = new Color(100, 100, 100);
-        //        playableSquare.tag = "SquareSelected";
-        //        print("tag: "+ playableSquare.tag);
-        //    }
-
-        //}
+        playerTurn++;
     }
 
     static bool IsWinningPlay(string[] currentPlayerPieces, string[] winCondition)
@@ -142,5 +175,4 @@ public class ObjectClicker : MonoBehaviour
         bool isWinningPlay = !hasMissingPieces;
         return isWinningPlay;
     }
-
 }
