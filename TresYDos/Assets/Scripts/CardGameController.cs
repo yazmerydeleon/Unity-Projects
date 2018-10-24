@@ -81,14 +81,14 @@ public class CardGameController : MonoBehaviour {
     {
         //Clubs
         deck.Add(new Card("Clubs",  1, GameObject.Find("C_1")));
-        deck.Add(new Card("Clubs",  2, GameObject.Find("C_2")));
-        deck.Add(new Card("Clubs",  3, GameObject.Find("C_3")));
-        deck.Add(new Card("Clubs",  4, GameObject.Find("C_4")));
-        deck.Add(new Card("Clubs",  5, GameObject.Find("C_5")));
-        deck.Add(new Card("Clubs",  6, GameObject.Find("C_6")));
-        deck.Add(new Card("Clubs",  7, GameObject.Find("C_7")));
-        deck.Add(new Card("Clubs",  8, GameObject.Find("C_8")));
-        deck.Add(new Card("Clubs",  9, GameObject.Find("C_9")));
+        deck.Add(new Card("Clubs", 2, GameObject.Find("C_2")));
+        deck.Add(new Card("Clubs", 3, GameObject.Find("C_3")));
+        deck.Add(new Card("Clubs", 4, GameObject.Find("C_4")));
+        deck.Add(new Card("Clubs", 5, GameObject.Find("C_5")));
+        deck.Add(new Card("Clubs", 6, GameObject.Find("C_6")));
+        deck.Add(new Card("Clubs", 7, GameObject.Find("C_7")));
+        deck.Add(new Card("Clubs", 8, GameObject.Find("C_8")));
+        deck.Add(new Card("Clubs", 9, GameObject.Find("C_9")));
         deck.Add(new Card("Clubs", 10, GameObject.Find("C_10")));
         deck.Add(new Card("Clubs", 11, GameObject.Find("C_11")));
         deck.Add(new Card("Clubs", 12, GameObject.Find("C_12")));
